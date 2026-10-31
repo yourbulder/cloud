@@ -1,1204 +1,581 @@
+
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>VAULT</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            gh: {
-              bg: '#0d1117',
-              surface: '#161b22',
-              border: '#30363d',
-              text: '#c9d1d9',
-              muted: '#8b949e',
-              green: '#238636',
-              red: '#da3633'
-            }
-          }
-        }
-      }
-    }
-  </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f5f6f8">
+<title>Cloud Drive — Your Personal Space</title>
 
-  <style>
-    /* Strict flat matte theme: zero shadows, zero gradients, zero animations */
-    * {
-      box-sizing: border-box;
-      box-shadow: none !important;
-      text-shadow: none !important;
-      transition: none !important;
-      animation: none !important;
-      background-image: none !important;
-    }
-    body {
-      background-color: #0d1117;
-      color: #c9d1d9;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-      -webkit-font-smoothing: antialiased;
-    }
-    input:focus, button:focus {
-      outline: 1px solid #c9d1d9 !important;
-      outline-offset: -1px;
-    }
-    .drop-active {
-      border-color: #c9d1d9 !important;
-    }
-  </style>
+<script defer crossorigin="anonymous"
+src="https://feasible-tortoise-4625.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"></script>
+
+<script defer crossorigin="anonymous"
+data-clerk-publishable-key="pk_test_ZmVhc2libGUtdG9ydG9pc2UtNDYyNS5jbGVyay5hY2NvdW50cy5kZXYk"
+src="https://feasible-tortoise-4625.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"></script>
+
+<style>
+:root {
+  --bg:#f5f6f8;
+  --white:#fff;
+  --text:#202938;
+  --muted:#788394;
+  --line:#e7eaf0;
+  --blue:#315b91;
+  --red:#b94b4b;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;background:var(--bg);color:var(--text);
+ font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+button,input{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+#authScreen{
+ min-height:100vh;display:grid;place-items:center;padding:20px
+}
+.auth-card{
+ width:100%;max-width:440px;background:white;padding:30px;
+ border:1px solid var(--line);border-radius:17px;
+ box-shadow:0 10px 35px rgba(20,35,55,.05)
+}
+.brand{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:750}
+.logo{
+ width:39px;height:39px;background:var(--blue);color:white;
+ border-radius:10px;display:grid;place-items:center;font-size:21px
+}
+.auth-card h1{font-size:26px;margin:28px 0 7px}
+.muted{font-size:13px;color:var(--muted);line-height:1.6}
+.tabs{display:flex;gap:8px;margin:23px 0}
+.tab,.btn,.small{
+ border:1px solid var(--line);background:white;border-radius:9px;
+ padding:11px 15px;color:var(--text)
+}
+.tab{flex:1}
+.tab.active{background:#edf2f8;color:var(--blue);border-color:#d4dfed}
+#authMount{min-height:260px}
+#appScreen{min-height:100vh}
+.topbar{
+ height:68px;background:white;border-bottom:1px solid var(--line);
+ display:flex;justify-content:space-between;align-items:center;
+ padding:0 5%;position:sticky;top:0;z-index:5
+}
+.topbar .brand{font-size:19px}
+.layout{
+ max-width:1250px;margin:auto;padding:32px 24px;
+ display:grid;grid-template-columns:215px minmax(0,1fr);gap:25px
+}
+.sidebar,.stat,.file-list{
+ background:white;border:1px solid var(--line);border-radius:12px
+}
+.sidebar{padding:17px;height:max-content}
+.side-label{
+ color:var(--muted);font-size:11px;font-weight:700;
+ letter-spacing:1px;margin:7px 0 15px
+}
+.side-link{
+ width:100%;padding:12px;border:0;background:transparent;
+ text-align:left;border-radius:8px;color:#526071
+}
+.side-link.active{background:#edf2f8;color:var(--blue)}
+.storage-box{background:#f7f8fa;padding:12px;border-radius:9px;margin-top:25px}
+.progress{height:6px;background:#e4e8ee;border-radius:10px;margin:12px 0}
+.progress-fill{height:100%;background:var(--blue);width:0}
+.main{min-width:0}
+.heading{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:27px;margin:0 0 7px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font-size:13px;font-weight:600}
+.primary{background:var(--blue);color:white;border-color:var(--blue)}
+.danger{color:var(--red)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:25px 0}
+.stat{padding:16px}
+.stat span{font-size:12px;color:var(--muted)}
+.stat strong{display:block;font-size:22px;margin-top:8px}
+#dropZone{
+ margin-top:17px;padding:25px;text-align:center;
+ border:1.5px dashed #bdc9d8;border-radius:12px;background:#fafbfd
+}
+#dropZone p{font-size:13px;color:var(--muted)}
+#fileInput{display:none}
+#progressText{font-size:12px;color:var(--muted);margin-top:10px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:25px 0 14px}
+.toolbar h2{font-size:17px}
+.search{padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:220px;max-width:100%}
+.file-row{
+ display:grid;grid-template-columns:minmax(0,1fr) 90px 110px 110px;
+ align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)
+}
+.file-row:last-child{border-bottom:0}
+.file-name{display:flex;align-items:center;gap:11px;min-width:0}
+.file-icon{
+ width:38px;height:38px;display:grid;place-items:center;
+ background:#edf2f8;color:var(--blue);border-radius:9px;flex-shrink:0
+}
+.file-title{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-sub,.file-meta{font-size:11px;color:var(--muted);margin-top:4px}
+.file-actions{display:flex;justify-content:flex-end;gap:5px}
+.small{padding:7px 9px;font-size:12px}
+.empty{text-align:center;padding:55px 15px}
+.empty strong{display:block;margin:10px}
+.notice{padding:12px 14px;background:#edf2f8;color:var(--blue);border-radius:8px;font-size:13px;margin:14px 0}
+.error{background:#fff0f0;color:#a33}
+.modal{
+ position:fixed;inset:0;background:#0007;z-index:20;
+ display:grid;place-items:center;padding:18px
+}
+.modal-card{
+ background:white;width:100%;max-width:450px;padding:25px;border-radius:14px
+}
+.modal-card input{
+ width:100%;padding:12px;border:1px solid var(--line);
+ border-radius:8px;margin:7px 0 15px
+}
+.code{
+ background:#f2f4f7;padding:15px;border-radius:9px;
+ font-family:monospace;overflow-wrap:anywhere;margin:14px 0
+}
+footer{text-align:center;padding:25px;color:var(--muted);font-size:11px}
+@media(max-width:760px){
+ .layout{grid-template-columns:1fr;padding:20px 13px}
+ .sidebar{display:none}
+ .topbar{padding:0 14px}
+ .stats{gap:7px}
+ .stat{padding:11px}
+ .stat strong{font-size:17px}
+ .file-row{grid-template-columns:minmax(0,1fr) auto}
+ .file-meta{display:none}
+ .file-actions{grid-column:2}
+ .auth-card{padding:23px}
+ h1{font-size:23px}
+}
+</style>
 </head>
-<body class="min-h-screen flex flex-col bg-gh-bg text-gh-text">
 
-  <!-- ==========================================
-       VIEW 1: MINIMAL AUTH SCREEN (max-w-[360px])
-       ========================================== -->
-  <main id="auth-view" class="flex-1 flex items-center justify-center p-4">
-    <div class="w-full max-w-[360px] bg-gh-surface border border-gh-border">
-      
-      <!-- Minimal Header -->
-      <div class="px-5 py-4 border-b border-gh-border flex items-center justify-between">
-        <span class="font-mono font-semibold text-sm text-white tracking-wider">VAULT</span>
-        <span class="text-xs font-mono text-gh-muted">NO-EMAIL ACCESS</span>
-      </div>
+<body>
 
-      <!-- Toggle: Sign In / Create Account -->
-      <div class="grid grid-cols-2 border-b border-gh-border text-xs font-mono bg-gh-bg">
-        <button
-          type="button"
-          id="tab-login"
-          onclick="switchAuthTab('login')"
-          class="py-2.5 text-center font-medium text-white bg-gh-surface border-r border-gh-border"
-        >
-          Sign In
-        </button>
-        <button
-          type="button"
-          id="tab-register"
-          onclick="switchAuthTab('register')"
-          class="py-2.5 text-center font-medium text-gh-muted hover:text-gh-text"
-        >
-          Create Account
-        </button>
-      </div>
-
-      <!-- 2-Input Form -->
-      <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="p-5 space-y-4">
-        <div id="auth-error-box" class="hidden p-2.5 bg-gh-bg border border-gh-red text-gh-red text-xs font-mono"></div>
-
-        <div>
-          <label for="auth-username" class="block text-xs font-mono text-gh-muted mb-1.5">Username (Unique ID)</label>
-          <input
-            type="text"
-            id="auth-username"
-            required
-            autocomplete="username"
-            placeholder="username"
-            class="w-full px-3 py-2 bg-gh-bg border border-gh-border text-sm font-mono text-white placeholder-gh-muted"
-          />
-        </div>
-
-        <div>
-          <label for="auth-password" class="block text-xs font-mono text-gh-muted mb-1.5">Password</label>
-          <input
-            type="password"
-            id="auth-password"
-            required
-            minlength="4"
-            autocomplete="current-password"
-            placeholder="••••••••"
-            class="w-full px-3 py-2 bg-gh-bg border border-gh-border text-sm font-mono text-white placeholder-gh-muted"
-          />
-        </div>
-
-        <button
-          type="submit"
-          id="auth-submit-btn"
-          class="w-full py-2.5 px-4 bg-gh-green text-white font-mono text-xs font-medium uppercase tracking-wider border border-gh-border"
-        >
-          <span id="auth-submit-text">Sign In</span>
-        </button>
-
-        <div class="pt-2 border-t border-gh-border text-[11px] font-mono text-gh-muted leading-relaxed">
-          • Usernames are globally unique. Duplicate IDs are strictly denied.<br/>
-          • Log in from any mobile or PC with your Username &amp; Password.
-        </div>
-      </form>
-    </div>
-  </main>
-
-  <!-- ==========================================
-       VIEW 2: MAIN WORKSPACE (max-w-[680px])
-       ========================================== -->
-  <div id="vault-view" class="hidden flex-1 w-full max-w-[680px] mx-auto px-4 py-6 flex flex-col space-y-4">
-    
-    <!-- Simple Top Header -->
-    <header class="flex items-center justify-between pb-3 border-b border-gh-border">
-      <div class="flex items-center space-x-2.5">
-        <span class="font-mono font-semibold text-base text-white tracking-wider">VAULT</span>
-        <span id="storage-badge" class="px-2 py-0.5 bg-gh-surface border border-gh-border text-[11px] font-mono text-gh-green">
-          CLOUD SYNC ACTIVE
-        </span>
-      </div>
-      <div class="flex items-center space-x-3">
-        <span id="active-username-display" class="text-xs font-mono text-gh-muted">@user</span>
-        <button
-          type="button"
-          onclick="handleLogout()"
-          class="px-2.5 py-1 bg-gh-surface text-gh-text hover:text-white border border-gh-border text-xs font-mono"
-        >
-          Sign Out
-        </button>
-      </div>
-    </header>
-
-    <!-- Inline Status Notice (Only shown on error or active status) -->
-    <div id="status-banner" class="hidden px-3 py-2 bg-gh-surface border border-gh-border text-xs font-mono flex items-center justify-between">
-      <span id="status-message" class="text-gh-text truncate pr-2"></span>
-      <button type="button" onclick="hideBanner()" class="text-gh-muted hover:text-white text-xs">[x]</button>
-    </div>
-
-    <!-- Clean Single-Row Upload Bar -->
-    <div
-      id="dropzone"
-      onclick="document.getElementById('file-input').click()"
-      class="w-full bg-gh-surface border border-gh-border p-3 cursor-pointer flex items-center justify-between hover:border-gh-muted"
-    >
-      <input type="file" id="file-input" multiple class="hidden" onchange="handleFileSelect(event)" />
-      <span class="text-xs font-mono text-gh-muted">Select or drop any file (.pptx, .pdf, .zip, etc.)</span>
-      <span class="px-3 py-1.5 bg-gh-green text-white text-xs font-mono font-medium border border-gh-border">
-        + Upload Any File (.pptx, .pdf, .zip, etc.)
-      </span>
-    </div>
-
-    <!-- Inline Upload Progress Bar (Hidden when idle) -->
-    <div id="upload-progress-container" class="hidden bg-gh-surface border border-gh-border p-3 space-y-1.5">
-      <div class="flex items-center justify-between text-xs font-mono">
-        <span id="upload-filename" class="text-gh-text truncate pr-2">Uploading...</span>
-        <span id="upload-percent" class="text-gh-muted">0%</span>
-      </div>
-      <div class="w-full h-1.5 bg-gh-bg border border-gh-border">
-        <div id="upload-progress-bar" class="h-full bg-gh-green" style="width: 0%"></div>
-      </div>
-    </div>
-
-    <!-- Search Input (Shown when user has files) -->
-    <div id="search-wrapper" class="hidden">
-      <input
-        type="text"
-        id="file-search"
-        oninput="renderFileList()"
-        placeholder="Search saved files..."
-        class="w-full px-3 py-2 bg-gh-surface border border-gh-border text-xs font-mono text-white placeholder-gh-muted"
-      />
-    </div>
-
-    <!-- Minimalist File List -->
-    <div id="file-list-container" class="border border-gh-border bg-gh-surface divide-y divide-gh-border">
-      <!-- Populated dynamically via JS -->
-    </div>
-
-    <!-- Compact Collapsible: Where Files Save / GitHub Setup -->
-    <footer class="pt-4 border-t border-gh-border text-xs font-mono text-gh-muted">
-      <div class="flex items-center justify-between">
-        <span id="sync-engine-label">CLOUD SYNC ACTIVE · Unique ID Enforced</span>
-        <button
-          type="button"
-          onclick="toggleCloudConfig()"
-          class="text-gh-muted hover:text-white underline"
-        >
-          Where Files Save / GitHub Setup
-        </button>
-      </div>
-
-      <div id="cloud-config-panel" class="hidden mt-3 p-3.5 bg-gh-surface border border-gh-border space-y-3 text-gh-text">
-        <div class="space-y-1.5 text-[11px] leading-relaxed">
-          <div class="font-semibold text-white">1. Where do my files &amp; ID save right now?</div>
-          <p class="text-gh-muted">
-            Inside this workspace, your Username ID, password hash, and uploaded files (sliced into safe 250KB cloud chunks) save automatically to the built-in <span class="text-white">Cloud Firestore Database</span> (`vault_users`, `vault_files`, `vault_chunks`) AND your browser's <span class="text-white">Permanent IndexedDB</span>.
-          </p>
-          <div class="font-semibold text-white pt-1">2. What happens if someone tries to create the same Username?</div>
-          <p class="text-gh-muted">
-            It is <span class="text-white">strictly denied</span>. When creating an account, VAULT checks the global `vault_users` registry first. If `@username` exists, creation is blocked.
-          </p>
-          <div class="font-semibold text-white pt-1">3. Hosting on GitHub Pages for 100% Free Mobile Access:</div>
-          <p class="text-gh-muted">
-            GitHub Pages hosts static HTML for free. To connect your own 1GB free cross-device database on GitHub Pages, create a free project at <span class="text-white">supabase.com</span>, create a public storage bucket named <span class="text-white">vault</span>, and paste your URL &amp; Anon Key below:
-          </p>
-        </div>
-        <div class="grid grid-cols-1 gap-2 pt-1">
-          <input
-            type="text"
-            id="cfg-sb-url"
-            placeholder="Supabase Project URL (https://xyz.supabase.co)"
-            class="w-full px-2.5 py-1.5 bg-gh-bg border border-gh-border text-xs font-mono text-white placeholder-gh-muted"
-          />
-          <input
-            type="password"
-            id="cfg-sb-key"
-            placeholder="Supabase Anon Public Key"
-            class="w-full px-2.5 py-1.5 bg-gh-bg border border-gh-border text-xs font-mono text-white placeholder-gh-muted"
-          />
-          <input
-            type="text"
-            id="cfg-sb-bucket"
-            placeholder="Supabase Storage Bucket Name (default: vault)"
-            class="w-full px-2.5 py-1.5 bg-gh-bg border border-gh-border text-xs font-mono text-white placeholder-gh-muted"
-          />
-        </div>
-        <div class="flex items-center justify-end space-x-2">
-          <button
-            type="button"
-            onclick="clearCloudConfig()"
-            class="px-2.5 py-1 bg-gh-bg text-gh-muted hover:text-white border border-gh-border text-xs font-mono"
-          >
-            Reset
-          </button>
-          <button
-            type="button"
-            onclick="saveCloudConfig()"
-            class="px-2.5 py-1 bg-gh-green text-white border border-gh-border text-xs font-mono"
-          >
-            Save Sync Config
-          </button>
-        </div>
-      </div>
-    </footer>
-
+<section id="authScreen">
+ <div class="auth-card">
+  <div class="brand"><div class="logo">☁</div>Cloud Drive</div>
+  <h1>Your files. Your space.</h1>
+  <p class="muted">Your personal storage, accessible from anywhere.</p>
+  <div class="tabs">
+   <button class="tab active" id="loginTab">Sign in</button>
+   <button class="tab" id="signupTab">Create account</button>
   </div>
-
-  <!-- ==========================================
-       DUAL-ENGINE PERMANENT STORAGE & AUTH LOGIC
-       ========================================== -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    let db = null;
-    let auth = null;
-    let currentUser = null;
-    let firebaseReady = false;
-    let authInitPromise = null;
-    let currentAuthMode = 'login';
-    let activeAccount = null;
-    let vaultFilesMap = new Map(); // id -> file metadata
-    let unsubscribeFiles = null;
-    let idbInstance = null;
-
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'vault-zero-production';
-
-    // ==========================================
-    // 1. PERMANENT INDEXEDDB ENGINE ('VaultPermanentDB')
-    // ==========================================
-    function openPermanentDB() {
-      if (idbInstance) return Promise.resolve(idbInstance);
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open('VaultPermanentDB', 2);
-        req.onupgradeneeded = (e) => {
-          const database = e.target.result;
-          if (!database.objectStoreNames.contains('accounts')) {
-            database.createObjectStore('accounts', { keyPath: 'username' });
-          }
-          if (!database.objectStoreNames.contains('files')) {
-            database.createObjectStore('files', { keyPath: 'id' });
-          }
-          if (!database.objectStoreNames.contains('binaries')) {
-            database.createObjectStore('binaries', { keyPath: 'id' });
-          }
-          if (!database.objectStoreNames.contains('settings')) {
-            database.createObjectStore('settings', { keyPath: 'key' });
-          }
-        };
-        req.onsuccess = (e) => {
-          idbInstance = e.target.result;
-          resolve(idbInstance);
-        };
-        req.onerror = (e) => reject(e.target.error);
-      });
-    }
-
-    async function idbPut(storeName, value) {
-      const database = await openPermanentDB();
-      return new Promise((resolve, reject) => {
-        const tx = database.transaction(storeName, 'readwrite');
-        const store = tx.objectStore(storeName);
-        const req = store.put(value);
-        req.onsuccess = () => resolve(true);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    async function idbGet(storeName, key) {
-      const database = await openPermanentDB();
-      return new Promise((resolve, reject) => {
-        const tx = database.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-        const req = store.get(key);
-        req.onsuccess = () => resolve(req.result || null);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    async function idbGetAll(storeName) {
-      const database = await openPermanentDB();
-      return new Promise((resolve, reject) => {
-        const tx = database.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-        const req = store.getAll();
-        req.onsuccess = () => resolve(req.result || []);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    async function idbDelete(storeName, key) {
-      const database = await openPermanentDB();
-      return new Promise((resolve, reject) => {
-        const tx = database.transaction(storeName, 'readwrite');
-        const store = tx.objectStore(storeName);
-        const req = store.delete(key);
-        req.onsuccess = () => resolve(true);
-        req.onerror = () => reject(req.error);
-      });
-    }
-
-    // ==========================================
-    // 2. CLOUD FIRESTORE INITIALIZATION (RULE 3 COMPLIANT)
-    // ==========================================
-    function ensureCloudConnected() {
-      if (authInitPromise) return authInitPromise;
-      authInitPromise = (async () => {
-        await openPermanentDB();
-        await loadCloudSettingsUI();
-
-        try {
-          if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-            const firebaseConfig = JSON.parse(__firebase_config);
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-              await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-              await signInAnonymously(auth);
-            }
-
-            currentUser = auth.currentUser;
-            if (!currentUser) {
-              await new Promise((resolve) => {
-                const unsub = onAuthStateChanged(auth, (u) => {
-                  if (u) currentUser = u;
-                  unsub();
-                  resolve();
-                });
-              });
-            }
-            if (currentUser) {
-              firebaseReady = true;
-            }
-          }
-        } catch (err) {
-          console.warn('Cloud init fallback to permanent IndexedDB:', err);
-        }
-
-        updateStorageBadge();
-      })();
-      return authInitPromise;
-    }
-
-    async function initCloudBackend() {
-      await ensureCloudConnected();
-
-      // Auto-restore active session so refresh never loses login or files
-      const savedSession = await idbGet('settings', 'active_session');
-      if (savedSession && savedSession.username && savedSession.passHash) {
-        activeAccount = {
-          username: savedSession.username,
-          passHash: savedSession.passHash
-        };
-        enterWorkspace();
-      }
-    }
-
-    function updateStorageBadge() {
-      const badge = document.getElementById('storage-badge');
-      const label = document.getElementById('sync-engine-label');
-      if ((firebaseReady && currentUser) || (supabaseConfig && supabaseConfig.url)) {
-        badge.textContent = 'CLOUD SYNC ACTIVE';
-        label.textContent = 'CLOUD SYNC ACTIVE · Free Cloud DB + Local Cache';
-      } else {
-        badge.textContent = 'LOCAL VAULT ACTIVE';
-        label.textContent = 'LOCAL VAULT ACTIVE · Connect Supabase for GitHub Pages';
-      }
-    }
-
-    // ==========================================
-    // 3. OPTIONAL SUPABASE CLOUD SYNC SETTINGS
-    // ==========================================
-    let supabaseConfig = null;
-
-    async function loadCloudSettingsUI() {
-      const cfg = await idbGet('settings', 'supabase_config');
-      if (cfg && cfg.url && cfg.anonKey) {
-        supabaseConfig = cfg;
-        document.getElementById('cfg-sb-url').value = cfg.url;
-        document.getElementById('cfg-sb-key').value = cfg.anonKey;
-        document.getElementById('cfg-sb-bucket').value = cfg.bucket || 'vault';
-      }
-    }
-
-    window.toggleCloudConfig = function() {
-      document.getElementById('cloud-config-panel').classList.toggle('hidden');
-    };
-
-    window.saveCloudConfig = async function() {
-      const url = document.getElementById('cfg-sb-url').value.trim().replace(/\/$/, '');
-      const anonKey = document.getElementById('cfg-sb-key').value.trim();
-      const bucket = document.getElementById('cfg-sb-bucket').value.trim() || 'vault';
-      if (!url || !anonKey) {
-        return showBanner('Please enter both Supabase URL and Anon Key.', true);
-      }
-      supabaseConfig = { key: 'supabase_config', url, anonKey, bucket };
-      await idbPut('settings', supabaseConfig);
-      updateStorageBadge();
-      document.getElementById('cloud-config-panel').classList.add('hidden');
-      showBanner('Supabase 1GB cloud sync configuration saved permanently.');
-    };
-
-    window.clearCloudConfig = async function() {
-      supabaseConfig = null;
-      await idbDelete('settings', 'supabase_config');
-      document.getElementById('cfg-sb-url').value = '';
-      document.getElementById('cfg-sb-key').value = '';
-      document.getElementById('cfg-sb-bucket').value = '';
-      updateStorageBadge();
-      showBanner('Cloud sync configuration reset to default.');
-    };
-
-    // Helper for Supabase account & metadata registry when hosted on GitHub Pages
-    async function sbFetchAccount(username) {
-      if (!supabaseConfig || !supabaseConfig.url || !supabaseConfig.anonKey) return null;
-      try {
-        const res = await fetch(`${supabaseConfig.url}/storage/v1/object/public/${supabaseConfig.bucket}/_users/${username}.json?t=${Date.now()}`);
-        if (res.ok) return await res.json();
-      } catch (e) {}
-      return null;
-    }
-
-    async function sbSaveAccount(accObj) {
-      if (!supabaseConfig || !supabaseConfig.url || !supabaseConfig.anonKey) return;
-      try {
-        const uploadUrl = `${supabaseConfig.url}/storage/v1/object/${supabaseConfig.bucket}/_users/${accObj.username}.json`;
-        await fetch(uploadUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${supabaseConfig.anonKey}`,
-            'apikey': supabaseConfig.anonKey,
-            'Content-Type': 'application/json',
-            'x-upsert': 'true'
-          },
-          body: JSON.stringify(accObj)
-        });
-      } catch (e) {}
-    }
-
-    // ==========================================
-    // 4. CRYPTO & HELPERS
-    // ==========================================
-    async function sha256(message) {
-      const msgBuffer = new TextEncoder().encode(message);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    function sanitizeUsername(raw) {
-      return raw.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, '');
-    }
-
-    function arrayBufferToBase64(buffer) {
-      let binary = '';
-      const bytes = new Uint8Array(buffer);
-      const chunkSize = 0x8000;
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
-      }
-      return btoa(binary);
-    }
-
-    function base64ToUint8Array(base64) {
-      const binaryString = atob(base64);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      return bytes;
-    }
-
-    window.showBanner = function(message, isError = false) {
-      const banner = document.getElementById('status-banner');
-      const msgEl = document.getElementById('status-message');
-      banner.classList.remove('hidden');
-      banner.className = `px-3 py-2 bg-gh-surface border ${isError ? 'border-gh-red text-gh-red' : 'border-gh-border text-gh-text'} text-xs font-mono flex items-center justify-between`;
-      msgEl.textContent = message;
-    };
-
-    window.hideBanner = function() {
-      document.getElementById('status-banner').classList.add('hidden');
-    };
-
-    // ==========================================
-    // 5. STRICT GLOBAL USERNAME UNIQUENESS & AUTH
-    // ==========================================
-    window.switchAuthTab = function(mode) {
-      currentAuthMode = mode;
-      const tabLogin = document.getElementById('tab-login');
-      const tabRegister = document.getElementById('tab-register');
-      const submitText = document.getElementById('auth-submit-text');
-      const errorBox = document.getElementById('auth-error-box');
-
-      errorBox.classList.add('hidden');
-
-      if (mode === 'login') {
-        tabLogin.className = 'py-2.5 text-center font-medium text-white bg-gh-surface border-r border-gh-border';
-        tabRegister.className = 'py-2.5 text-center font-medium text-gh-muted hover:text-gh-text';
-        submitText.textContent = 'Sign In';
-      } else {
-        tabRegister.className = 'py-2.5 text-center font-medium text-white bg-gh-surface border-l border-gh-border';
-        tabLogin.className = 'py-2.5 text-center font-medium text-gh-muted hover:text-gh-text';
-        submitText.textContent = 'Create Account';
-      }
-    };
-
-    function showAuthError(msg) {
-      const box = document.getElementById('auth-error-box');
-      box.textContent = msg;
-      box.classList.remove('hidden');
-    }
-
-    // Fetch existing user account across Cloud Firestore (`vault_users` + legacy `vault_accounts`), Supabase, and Local IndexedDB
-    async function findExistingAccount(username) {
-      await ensureCloudConnected();
-
-      let cloudAcc = null;
-      if (firebaseReady && currentUser) {
-        try {
-          const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'vault_users', username);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            cloudAcc = userSnap.data();
-          } else {
-            // Check legacy collection fallback
-            const legacyRef = doc(db, 'artifacts', appId, 'public', 'data', 'vault_accounts', username);
-            const legacySnap = await getDoc(legacyRef);
-            if (legacySnap.exists()) {
-              cloudAcc = legacySnap.data();
-            }
-          }
-        } catch (cloudErr) {
-          console.warn('Cloud user lookup warning:', cloudErr);
-        }
-      }
-
-      if (cloudAcc) return cloudAcc;
-
-      const sbAcc = await sbFetchAccount(username);
-      if (sbAcc) return sbAcc;
-
-      const localAcc = await idbGet('accounts', username);
-      return localAcc || null;
-    }
-
-    window.handleAuthSubmit = async function(e) {
-      e.preventDefault();
-      document.getElementById('auth-error-box').classList.add('hidden');
-
-      const username = sanitizeUsername(document.getElementById('auth-username').value);
-      const password = document.getElementById('auth-password').value;
-
-      if (!username || username.length < 3) {
-        return showAuthError('Username must be at least 3 characters (letters/numbers).');
-      }
-      if (password.length < 4) {
-        return showAuthError('Password must be at least 4 characters.');
-      }
-
-      const submitBtn = document.getElementById('auth-submit-btn');
-      const submitText = document.getElementById('auth-submit-text');
-      const originalLabel = submitText.textContent;
-      submitBtn.disabled = true;
-      submitText.textContent = 'Checking Cloud...';
-
-      try {
-        await ensureCloudConnected();
-        const passHash = await sha256(`vaultzero::${username}::${password}`);
-        const existingAcc = await findExistingAccount(username);
-
-        if (currentAuthMode === 'register') {
-          // STRICT UNIQUENESS CHECK: Deny if username already exists in Cloud or Local DB
-          if (existingAcc) {
-            submitBtn.disabled = false;
-            submitText.textContent = originalLabel;
-            return showAuthError(`Username '@${username}' is already taken. Please choose another.`);
-          }
-
-          const newAcc = { username, passHash, createdAt: Date.now() };
-
-          // Save to Cloud Firestore (`vault_users`)
-          if (firebaseReady && currentUser) {
-            const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'vault_users', username);
-            await setDoc(userRef, newAcc);
-          }
-
-          // Save to Supabase if configured
-          await sbSaveAccount(newAcc);
-
-          // Save to Local Permanent IndexedDB
-          await idbPut('accounts', newAcc);
-        } else {
-          // SIGN IN CHECK: Verify account exists and password hash matches
-          if (!existingAcc) {
-            submitBtn.disabled = false;
-            submitText.textContent = originalLabel;
-            return showAuthError(`Account '@${username}' does not exist. Switch to Create Account.`);
-          }
-          if (existingAcc.passHash !== passHash) {
-            submitBtn.disabled = false;
-            submitText.textContent = originalLabel;
-            return showAuthError('Incorrect password.');
-          }
-
-          // Ensure account is synced across both Local IndexedDB and Cloud `vault_users`
-          await idbPut('accounts', existingAcc);
-          if (firebaseReady && currentUser) {
-            const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'vault_users', username);
-            await setDoc(userRef, existingAcc).catch(() => {});
-          }
-        }
-
-        activeAccount = { username, passHash };
-        await idbPut('settings', { key: 'active_session', username, passHash });
-        enterWorkspace();
-      } catch (err) {
-        showAuthError(err.message || 'Authentication error.');
-      } finally {
-        submitBtn.disabled = false;
-        submitText.textContent = originalLabel;
-      }
-    };
-
-    function enterWorkspace() {
-      document.getElementById('auth-view').classList.add('hidden');
-      document.getElementById('vault-view').classList.remove('hidden');
-      document.getElementById('active-username-display').textContent = '@' + activeAccount.username;
-      hideBanner();
-      loadAndSubscribeUserFiles();
-    }
-
-    window.handleLogout = async function() {
-      if (unsubscribeFiles) {
-        unsubscribeFiles();
-        unsubscribeFiles = null;
-      }
-      await idbDelete('settings', 'active_session');
-      activeAccount = null;
-      vaultFilesMap.clear();
-      document.getElementById('auth-password').value = '';
-      document.getElementById('vault-view').classList.add('hidden');
-      document.getElementById('auth-view').classList.remove('hidden');
-    };
-
-    // ==========================================
-    // 6. LOAD & SYNC FILES (CLOUD FIRESTORE + INDEXEDDB)
-    // ==========================================
-    async function loadAndSubscribeUserFiles() {
-      if (!activeAccount) return;
-      vaultFilesMap.clear();
-
-      // Step 1: Immediately load permanent files from local IndexedDB
-      try {
-        const allLocalFiles = await idbGetAll('files');
-        for (const f of allLocalFiles) {
-          if (f && f.owner === activeAccount.username && f.ownerHash === activeAccount.passHash) {
-            vaultFilesMap.set(f.id, f);
-          }
-        }
-        renderFileList();
-      } catch (err) {
-        console.error('Local file load error:', err);
-      }
-
-      // Step 2: Fetch & Subscribe to Cloud Firestore for cross-device sync
-      await ensureCloudConnected();
-      if (!firebaseReady || !currentUser) return;
-      if (unsubscribeFiles) unsubscribeFiles();
-
-      const filesCol = collection(db, 'artifacts', appId, 'public', 'data', 'vault_files');
-      unsubscribeFiles = onSnapshot(
-        filesCol,
-        async (snapshot) => {
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            if (data && data.owner === activeAccount.username && data.ownerHash === activeAccount.passHash) {
-              const fileObj = { id: docSnap.id, ...data };
-              vaultFilesMap.set(fileObj.id, fileObj);
-              idbPut('files', fileObj).catch(() => {});
-            }
-          });
-          renderFileList();
-        },
-        (err) => {
-          console.warn('Cloud listener fallback to local IndexedDB:', err);
-        }
-      );
-    }
-
-    // ==========================================
-    // 7. UPLOAD PPTX, PDF, ZIP & ANY FILE (250KB CLOUD CHUNKS)
-    // ==========================================
-    const dropzone = document.getElementById('dropzone');
-    if (dropzone) {
-      ['dragenter', 'dragover'].forEach(evtName => {
-        dropzone.addEventListener(evtName, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          dropzone.classList.add('drop-active');
-        });
-      });
-      ['dragleave', 'drop'].forEach(evtName => {
-        dropzone.addEventListener(evtName, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          dropzone.classList.remove('drop-active');
-        });
-      });
-      dropzone.addEventListener('drop', (e) => {
-        const files = e.dataTransfer?.files;
-        if (files && files.length > 0) {
-          processFilesUpload(Array.from(files));
-        }
-      });
-    }
-
-    window.handleFileSelect = function(e) {
-      const files = e.target.files;
-      if (files && files.length > 0) {
-        processFilesUpload(Array.from(files));
-      }
-      e.target.value = '';
-    };
-
-    function readFileAsArrayBuffer(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(reader.error || new Error('Failed to read file binary'));
-        reader.readAsArrayBuffer(file);
-      });
-    }
-
-    async function processFilesUpload(fileList) {
-      if (!activeAccount) return;
-      await ensureCloudConnected();
-
-      const progContainer = document.getElementById('upload-progress-container');
-      const progName = document.getElementById('upload-filename');
-      const progPercent = document.getElementById('upload-percent');
-      const progBar = document.getElementById('upload-progress-bar');
-
-      progContainer.classList.remove('hidden');
-      hideBanner();
-
-      let uploadedCount = 0;
-
-      for (let i = 0; i < fileList.length; i++) {
-        const file = fileList[i];
-        const fileId = 'f_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-        const mimeType = file.type || getFallbackMimeType(file.name);
-
-        progName.textContent = `Reading ${file.name}...`;
-        progPercent.textContent = '5%';
-        progBar.style.width = '5%';
-
-        try {
-          // Read raw binary ArrayBuffer (handles .pptx, .pdf, .zip, .apk, .mp4 reliably)
-          const arrayBuffer = await readFileAsArrayBuffer(file);
-          progPercent.textContent = '15%';
-          progBar.style.width = '15%';
-
-          // 1. Cache full raw binary in Local Permanent IndexedDB for instant access
-          await idbPut('binaries', {
-            id: fileId,
-            owner: activeAccount.username,
-            mimeType: mimeType,
-            buffer: arrayBuffer
-          });
-
-          let storageType = 'LOCAL_PERMANENT';
-          let totalChunks = 0;
-          let externalUrl = null;
-
-          // 2. If user configured Supabase Storage (for 1GB GitHub Pages cloud storage)
-          if (supabaseConfig && supabaseConfig.url && supabaseConfig.anonKey) {
-            try {
-              progName.textContent = `Uploading ${file.name} to Supabase Cloud...`;
-              const safePath = `${activeAccount.username}/${fileId}_${encodeURIComponent(file.name)}`;
-              const uploadUrl = `${supabaseConfig.url}/storage/v1/object/${supabaseConfig.bucket}/${safePath}`;
-              const res = await fetch(uploadUrl, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${supabaseConfig.anonKey}`,
-                  'apikey': supabaseConfig.anonKey,
-                  'Content-Type': mimeType,
-                  'x-upsert': 'true'
-                },
-                body: new Blob([arrayBuffer], { type: mimeType })
-              });
-              if (res.ok) {
-                storageType = 'SAVED_IN_CLOUD';
-                externalUrl = `${supabaseConfig.url}/storage/v1/object/public/${supabaseConfig.bucket}/${safePath}`;
-              }
-            } catch (sbErr) {
-              console.warn('Supabase upload skipped, using built-in Cloud DB:', sbErr);
-            }
-          }
-
-          // 3. Slice into safe 250KB Base64 chunks and save to Cloud Firestore (`vault_chunks`)
-          if (firebaseReady && currentUser) {
-            try {
-              const base64Data = arrayBufferToBase64(arrayBuffer);
-              const CHUNK_SIZE = 250 * 1024; // 250KB safe Base64 chunks
-              totalChunks = Math.ceil(base64Data.length / CHUNK_SIZE) || 1;
-
-              for (let c = 0; c < totalChunks; c++) {
-                progName.textContent = `Uploading chunk ${c + 1} of ${totalChunks} to Cloud (${file.name})...`;
-                const slice = base64Data.slice(c * CHUNK_SIZE, (c + 1) * CHUNK_SIZE);
-                const chunkId = `${fileId}_part_${c}`;
-                const chunkRef = doc(db, 'artifacts', appId, 'public', 'data', 'vault_chunks', chunkId);
-                await setDoc(chunkRef, {
-                  fileId: fileId,
-                  owner: activeAccount.username,
-                  index: c,
-                  data: slice
-                });
-                const pct = 15 + Math.round(((c + 1) / totalChunks) * 80);
-                progPercent.textContent = `${pct}%`;
-                progBar.style.width = `${pct}%`;
-              }
-              storageType = 'SAVED_IN_CLOUD';
-            } catch (cloudChunkErr) {
-              console.warn('Firestore chunk upload error:', cloudChunkErr);
-            }
-          }
-
-          const fileMeta = {
-            id: fileId,
-            name: file.name,
-            size: file.size,
-            mimeType: mimeType,
-            storageType: storageType,
-            totalChunks: totalChunks,
-            externalUrl: externalUrl,
-            owner: activeAccount.username,
-            ownerHash: activeAccount.passHash,
-            uploadedAt: Date.now()
-          };
-
-          // Save file metadata to Cloud Firestore (`vault_files`) first
-          if (firebaseReady && currentUser) {
-            try {
-              const fileRef = doc(db, 'artifacts', appId, 'public', 'data', 'vault_files', fileId);
-              await setDoc(fileRef, fileMeta);
-            } catch (metaErr) {
-              console.warn('Cloud metadata write warning:', metaErr);
-            }
-          }
-
-          // Save file metadata to Local Permanent IndexedDB
-          await idbPut('files', fileMeta);
-          vaultFilesMap.set(fileId, fileMeta);
-          renderFileList();
-
-          progPercent.textContent = '100%';
-          progBar.style.width = '100%';
-          uploadedCount++;
-        } catch (err) {
-          console.error('Upload error:', err);
-          showBanner(`Failed to save "${file.name}": ${err.message}`, true);
-        }
-      }
-
-      progContainer.classList.add('hidden');
-      progBar.style.width = '0%';
-
-      if (uploadedCount > 0) {
-        showBanner(`Saved ${uploadedCount} file${uploadedCount > 1 ? 's' : ''} to Cloud & Local Vault.`);
-      }
-    }
-
-    function getFallbackMimeType(filename) {
-      const ext = (filename.split('.').pop() || '').toLowerCase();
-      const map = {
-        pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        ppt: 'application/vnd.ms-powerpoint',
-        pdf: 'application/pdf',
-        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        zip: 'application/zip',
-        apk: 'application/vnd.android.package-archive',
-        mp4: 'video/mp4',
-        mp3: 'audio/mpeg',
-        png: 'image/png',
-        jpg: 'image/jpeg',
-        jpeg: 'image/jpeg'
-      };
-      return map[ext] || 'application/octet-stream';
-    }
-
-    // ==========================================
-    // 8. DOWNLOAD FILE (LOCAL CACHE -> CLOUD CHUNKS -> SUPABASE)
-    // ==========================================
-    window.downloadVaultFile = async function(fileId, btnEl) {
-      const fileObj = vaultFilesMap.get(fileId);
-      if (!fileObj) return;
-
-      const origText = btnEl ? btnEl.textContent : 'Download';
-      if (btnEl) {
-        btnEl.disabled = true;
-        btnEl.textContent = 'Fetching...';
-      }
-
-      try {
-        // Priority 1: Instant native binary Blob from Permanent IndexedDB
-        const localBinary = await idbGet('binaries', fileId);
-        if (localBinary && localBinary.buffer) {
-          const blob = new Blob([localBinary.buffer], { type: fileObj.mimeType || 'application/octet-stream' });
-          triggerBlobDownload(blob, fileObj.name);
-          return;
-        }
-
-        // Priority 2: External Supabase URL
-        if (fileObj.externalUrl) {
-          const a = document.createElement('a');
-          a.href = fileObj.externalUrl;
-          a.target = '_blank';
-          a.download = fileObj.name;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          return;
-        }
-
-        // Priority 3: Reassemble 250KB chunks from Cloud Firestore (`vault_chunks`) on any new device/session
-        await ensureCloudConnected();
-        if (firebaseReady && currentUser && fileObj.totalChunks > 0) {
-          let fullBase64 = '';
-          for (let c = 0; c < fileObj.totalChunks; c++) {
-            if (btnEl) {
-              btnEl.textContent = `${Math.round(((c + 1) / fileObj.totalChunks) * 100)}%`;
-            }
-            const chunkId = `${fileObj.id}_part_${c}`;
-            const chunkRef = doc(db, 'artifacts', appId, 'public', 'data', 'vault_chunks', chunkId);
-            const chunkSnap = await getDoc(chunkRef);
-            if (!chunkSnap.exists()) {
-              throw new Error(`Missing cloud chunk ${c + 1}/${fileObj.totalChunks}`);
-            }
-            const chunkData = chunkSnap.data().data;
-            const cleanSlice = c === 0 && chunkData.includes(',') ? chunkData.split(',')[1] : chunkData;
-            fullBase64 += cleanSlice;
-          }
-
-          const uint8 = base64ToUint8Array(fullBase64);
-          await idbPut('binaries', {
-            id: fileId,
-            owner: activeAccount.username,
-            mimeType: fileObj.mimeType,
-            buffer: uint8.buffer
-          });
-
-          const blob = new Blob([uint8], { type: fileObj.mimeType || 'application/octet-stream' });
-          triggerBlobDownload(blob, fileObj.name);
-          return;
-        }
-
-        throw new Error('File binary not found in Cloud or Local storage.');
-      } catch (err) {
-        showBanner(`Download failed: ${err.message}`, true);
-      } finally {
-        if (btnEl) {
-          btnEl.disabled = false;
-          btnEl.textContent = origText;
-        }
-      }
-    };
-
-    function triggerBlobDownload(blob, filename) {
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-    }
-
-    // ==========================================
-    // 9. DELETE FILE FROM CLOUD & LOCAL ENGINES
-    // ==========================================
-    window.deleteVaultFile = async function(fileId, btnEl) {
-      const fileObj = vaultFilesMap.get(fileId);
-      if (!fileObj) return;
-
-      if (btnEl) {
-        btnEl.disabled = true;
-        btnEl.textContent = '...';
-      }
-
-      try {
-        await idbDelete('files', fileId);
-        await idbDelete('binaries', fileId);
-        vaultFilesMap.delete(fileId);
-        renderFileList();
-
-        await ensureCloudConnected();
-        if (firebaseReady && currentUser) {
-          const totalChunks = fileObj.totalChunks || 0;
-          for (let c = 0; c < totalChunks; c++) {
-            const chunkId = `${fileObj.id}_part_${c}`;
-            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'vault_chunks', chunkId)).catch(() => {});
-          }
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'vault_files', fileId)).catch(() => {});
-        }
-      } catch (err) {
-        showBanner(`Delete failed: ${err.message}`, true);
-        if (btnEl) {
-          btnEl.disabled = false;
-          btnEl.textContent = 'Delete';
-        }
-      }
-    };
-
-    // ==========================================
-    // 10. RENDER CLEAN FILE LIST WITH CLOUD BADGE
-    // ==========================================
-    window.renderFileList = function() {
-      const container = document.getElementById('file-list-container');
-      const searchWrapper = document.getElementById('search-wrapper');
-      const searchQuery = (document.getElementById('file-search')?.value || '').trim().toLowerCase();
-
-      const allFiles = Array.from(vaultFilesMap.values()).sort((a, b) => (b.uploadedAt || 0) - (a.uploadedAt || 0));
-
-      if (allFiles.length > 0) {
-        searchWrapper.classList.remove('hidden');
-      } else {
-        searchWrapper.classList.add('hidden');
-      }
-
-      const filtered = allFiles.filter(f => {
-        return !searchQuery || f.name.toLowerCase().includes(searchQuery);
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="p-8 text-center text-xs font-mono text-gh-muted">
-            ${allFiles.length === 0 ? 'No files saved yet. Click "+ Upload Any File" above to store .pptx, .pdf, .zip, or any file in your Cloud Vault.' : 'No matching files.'}
-          </div>
-        `;
-        return;
-      }
-
-      container.innerHTML = filtered.map(f => {
-        const dateStr = new Date(f.uploadedAt || Date.now()).toLocaleDateString(undefined, {
-          month: 'short', day: '2-digit', year: 'numeric'
-        });
-        const safeName = escapeHtml(f.name);
-        const ext = getFileExtension(f.name);
-        const isCloudSaved = (f.totalChunks && f.totalChunks > 0) || f.storageType === 'SAVED_IN_CLOUD' || f.storageType === 'DUAL_PERMANENT_CLOUD' || f.externalUrl;
-        const statusBadge = isCloudSaved ? 'Saved in Cloud' : 'Saved Locally';
-
-        return `
-          <div class="px-3.5 py-3 flex items-center justify-between gap-3">
-            <div class="min-w-0 flex-1 flex items-center space-x-3">
-              <span class="px-2 py-1 bg-gh-bg border border-gh-border text-[10px] font-mono font-semibold text-white uppercase shrink-0">
-                ${ext}
-              </span>
-              <div class="min-w-0 flex-1">
-                <div class="text-sm text-gh-text font-medium truncate" title="${safeName}">${safeName}</div>
-                <div class="text-[11px] font-mono text-gh-muted flex items-center flex-wrap gap-1.5 mt-0.5">
-                  <span>${formatBytes(f.size)}</span>
-                  <span>·</span>
-                  <span>${dateStr}</span>
-                  <span>·</span>
-                  <span class="px-1.5 py-0.2 bg-gh-bg border border-gh-border text-[10px] ${isCloudSaved ? 'text-gh-green' : 'text-gh-muted'}">${statusBadge}</span>
-                </div>
-              </div>
-            </div>
-            <div class="flex items-center space-x-2 shrink-0">
-              <button
-                type="button"
-                onclick="downloadVaultFile('${f.id}', this)"
-                class="px-2.5 py-1 bg-gh-green text-white text-xs font-mono border border-gh-border"
-              >
-                Download
-              </button>
-              <button
-                type="button"
-                onclick="deleteVaultFile('${f.id}', this)"
-                class="px-2.5 py-1 bg-gh-bg hover:bg-gh-red text-gh-muted hover:text-white text-xs font-mono border border-gh-border"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    };
-
-    function getFileExtension(filename) {
-      const parts = String(filename).split('.');
-      if (parts.length > 1) {
-        return parts.pop().slice(0, 5).toUpperCase();
-      }
-      return 'FILE';
-    }
-
-    function formatBytes(bytes) {
-      if (!bytes || bytes === 0) return '0 B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      initCloudBackend();
-    });
-  </script>
+  <div id="authMount"></div>
+  <p style="text-align:center">
+   <button class="small" id="showRecovery">Forgot password? Recovery code</button>
+  </p>
+  <div id="authError" class="muted"></div>
+ </div>
+</section>
+
+<section id="appScreen" class="hidden">
+ <header class="topbar">
+  <div class="brand"><div class="logo">☁</div>Cloud Drive</div>
+  <div style="display:flex;align-items:center;gap:12px">
+   <span class="muted" id="usernameLabel"></span>
+   <div id="userButton"></div>
+  </div>
+ </header>
+
+ <div class="layout">
+  <aside class="sidebar">
+   <div class="side-label">WORKSPACE</div>
+   <button class="side-link active">▦ All files</button>
+   <button class="side-link" id="recoveryButton">♧ Recovery code</button>
+   <div class="storage-box">
+    <div class="side-label">STORAGE</div>
+    <strong id="sideUsage">0 MB / 250 MB</strong>
+    <div class="progress"><div class="progress-fill" id="sideProgress"></div></div>
+    <span class="muted">Personal storage</span>
+   </div>
+  </aside>
+
+  <main class="main">
+   <div class="heading">
+    <div>
+     <h1>My files</h1>
+     <p class="muted">Manage your personal files.</p>
+    </div>
+    <div class="actions">
+     <button class="btn" id="refreshBtn">↻ Refresh</button>
+     <button class="btn primary" id="uploadBtn">＋ Upload files</button>
+    </div>
+   </div>
+
+   <div class="stats">
+    <div class="stat"><span>Total files</span><strong id="totalFiles">0</strong></div>
+    <div class="stat"><span>Storage used</span><strong id="usedStorage">0 MB</strong></div>
+    <div class="stat"><span>Available</span><strong id="freeStorage">250 MB</strong></div>
+   </div>
+
+   <div id="message" class="notice hidden"></div>
+
+   <div id="dropZone">
+    <strong>Drop files here to upload</strong>
+    <p>Or choose files from your device. Maximum 20 MB per file.</p>
+    <button class="btn primary" id="browseBtn">Choose files</button>
+    <input type="file" id="fileInput" multiple>
+    <div id="progressText"></div>
+   </div>
+
+   <div class="toolbar">
+    <h2>All files</h2>
+    <input class="search" id="searchInput" placeholder="Search files...">
+   </div>
+
+   <div class="file-list" id="fileList">
+    <div class="empty">Loading files...</div>
+   </div>
+  </main>
+ </div>
+ <footer>Cloud Drive · Private personal storage</footer>
+</section>
+
+<div id="recoveryModal" class="modal hidden">
+ <div class="modal-card">
+  <h2>Account recovery</h2>
+  <p class="muted">Create your one-time recovery code. Save it safely.</p>
+  <div id="recoveryOutput" class="hidden">
+   <div class="code" id="recoveryCodeText"></div>
+   <button class="btn primary" id="copyRecovery">Copy recovery code</button>
+  </div>
+  <div id="recoveryMessage" class="notice hidden"></div>
+  <div class="actions" style="margin-top:18px">
+   <button class="btn primary" id="generateRecovery">Generate code</button>
+   <button class="btn" id="closeRecovery">Close</button>
+  </div>
+ </div>
+</div>
+
+<div id="resetModal" class="modal hidden">
+ <div class="modal-card">
+  <h2>Recover account</h2>
+  <p class="muted">Enter your username, recovery code and new password.</p>
+  <form id="resetForm">
+   <label class="muted">Username</label>
+   <input id="resetUsername" required autocomplete="username">
+   <label class="muted">Recovery code</label>
+   <input id="resetCode" required>
+   <label class="muted">New password (minimum 12 characters)</label>
+   <input id="resetPassword" type="password" minlength="12" maxlength="128" required>
+   <button class="btn primary" type="submit">Reset password</button>
+   <button class="btn" type="button" id="closeReset">Cancel</button>
+  </form>
+  <div id="resetMessage" class="notice hidden"></div>
+  <div id="newRecovery" class="hidden">
+   <p class="muted">Save your new recovery code:</p>
+   <div class="code" id="newRecoveryText"></div>
+   <button class="btn primary" id="copyNewRecovery">Copy code</button>
+  </div>
+ </div>
+</div>
+
+<script>
+const CONFIG = {
+ API: "https://cloud-drive-api.twinmactw.workers.dev"
+};
+
+let currentFiles = [];
+let currentAuthMode = "login";
+
+const $ = id => document.getElementById(id);
+
+function message(text,error=false) {
+ const el=$("message");
+ el.textContent=text;
+ el.classList.remove("hidden","error");
+ if(error) el.classList.add("error");
+}
+function hideMessage(){$("message").classList.add("hidden")}
+
+function formatBytes(n) {
+ if(n<1024)return n+" B";
+ if(n<1048576)return (n/1024).toFixed(1)+" KB";
+ return (n/1048576).toFixed(2)+" MB";
+}
+
+function escapeHTML(value) {
+ return String(value).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+async function getToken() {
+ if(!window.Clerk?.session)throw new Error("Please sign in again.");
+ const token=await Clerk.session.getToken();
+ if(!token)throw new Error("Session expired. Sign in again.");
+ return token;
+}
+
+async function api(path,options={}) {
+ const headers=new Headers(options.headers||{});
+ headers.set("Authorization","Bearer "+await getToken());
+
+ const response=await fetch(CONFIG.API+path,{
+  ...options,headers
+ });
+ const type=response.headers.get("content-type")||"";
+ const data=type.includes("application/json")?await response.json():null;
+ if(!response.ok)throw new Error(data?.error||"Request failed: "+response.status);
+ return data;
+}
+
+async function publicApi(path,body) {
+ const response=await fetch(CONFIG.API+path,{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify(body)
+ });
+ const data=await response.json();
+ if(!response.ok)throw new Error(data.error||"Request failed.");
+ return data;
+}
+
+function mountAuth(mode) {
+ currentAuthMode=mode;
+ $("loginTab").classList.toggle("active",mode==="login");
+ $("signupTab").classList.toggle("active",mode==="signup");
+ $("authMount").innerHTML="";
+ if(!window.Clerk)return;
+ if(mode==="login")Clerk.mountSignIn($("authMount"));
+ else Clerk.mountSignUp($("authMount"));
+}
+
+function showDashboard() {
+ $("authScreen").classList.add("hidden");
+ $("appScreen").classList.remove("hidden");
+ $("usernameLabel").textContent="@"+(Clerk.user?.username||"Account");
+ $("userButton").innerHTML="";
+ Clerk.mountUserButton($("userButton"));
+ loadFiles();
+}
+
+function showAuthentication() {
+ $("appScreen").classList.add("hidden");
+ $("authScreen").classList.remove("hidden");
+ mountAuth(currentAuthMode);
+}
+
+function refreshAuth() {
+ if(Clerk.isSignedIn)showDashboard();
+ else showAuthentication();
+}
+
+function fileIcon(name) {
+ const ext=name.split(".").pop().toLowerCase();
+ if(["jpg","jpeg","png","gif","webp"].includes(ext))return "▧";
+ if(["mp4","mov","avi","mkv"].includes(ext))return "▶";
+ if(["mp3","wav"].includes(ext))return "♫";
+ if(ext==="pdf")return "▤";
+ if(["zip","rar","7z"].includes(ext))return "▣";
+ return "◇";
+}
+
+function renderFiles() {
+ const query=$("searchInput").value.toLowerCase().trim();
+ const files=currentFiles.filter(f=>f.name.toLowerCase().includes(query));
+
+ if(!files.length) {
+  $("fileList").innerHTML=`
+   <div class="empty">
+    <div style="font-size:36px">▤</div>
+    <strong>${query?"No matching files":"Your drive is empty"}</strong>
+    <p class="muted">${query?"Try another search.":"Upload your first file."}</p>
+   </div>`;
+  return;
+ }
+
+ $("fileList").innerHTML=files.map(f=>`
+  <div class="file-row">
+   <div class="file-name">
+    <div class="file-icon">${fileIcon(f.name)}</div>
+    <div style="min-width:0">
+     <div class="file-title" title="${escapeHTML(f.name)}">${escapeHTML(f.name)}</div>
+     <div class="file-sub">${new Date(f.createdAt*1000).toLocaleDateString()}</div>
+    </div>
+   </div>
+   <div class="file-meta">${formatBytes(f.size)}</div>
+   <div class="file-meta">${escapeHTML(f.mimeType||"File")}</div>
+   <div class="file-actions">
+    <button class="small" data-download="${escapeHTML(f.id)}">↓</button>
+    <button class="small danger" data-delete="${escapeHTML(f.id)}">×</button>
+   </div>
+  </div>`).join("");
+
+ $("fileList").querySelectorAll("[data-download]").forEach(b=>{
+  b.addEventListener("click",()=>downloadFile(b.dataset.download));
+ });
+ $("fileList").querySelectorAll("[data-delete]").forEach(b=>{
+  b.addEventListener("click",()=>deleteFile(b.dataset.delete));
+ });
+}
+
+async function loadFiles() {
+ $("fileList").innerHTML='<div class="empty">Loading files...</div>';
+ try {
+  const data=await api("/api/files");
+  currentFiles=data.files||[];
+  const used=Number(data.storageUsedBytes||0);
+  const quota=Number(data.storageQuotaBytes||262144000);
+  const free=Math.max(0,quota-used);
+  $("totalFiles").textContent=currentFiles.length;
+  $("usedStorage").textContent=formatBytes(used);
+  $("freeStorage").textContent=formatBytes(free);
+  $("sideUsage").textContent=formatBytes(used)+" / "+formatBytes(quota);
+  $("sideProgress").style.width=Math.min(100,used/quota*100)+"%";
+  renderFiles();
+ } catch(e) {
+  $("fileList").innerHTML='<div class="empty">'+escapeHTML(e.message)+'</div>';
+ }
+}
+
+async function uploadFiles(list) {
+ const files=Array.from(list||[]);
+ if(!files.length)return;
+ hideMessage();
+
+ for(let i=0;i<files.length;i++) {
+  const file=files[i];
+  if(file.size>20*1024*1024) {
+   message(file.name+" exceeds 20 MB.",true);
+   continue;
+  }
+  $("progressText").textContent=
+   "Uploading "+(i+1)+" of "+files.length+": "+file.name;
+  try {
+   const form=new FormData();
+   form.append("file",file,file.name);
+   await api("/api/upload",{method:"POST",body:form});
+  } catch(e) {
+   message(file.name+": "+e.message,true);
+  }
+ }
+ $("progressText").textContent="Upload process finished.";
+ $("fileInput").value="";
+ await loadFiles();
+}
+
+async function downloadFile(id) {
+ try {
+  message("Preparing download...");
+  const response=await fetch(
+   CONFIG.API+"/api/download?id="+encodeURIComponent(id),
+   {headers:{Authorization:"Bearer "+await getToken()}}
+  );
+  if(!response.ok) {
+   const data=await response.json().catch(()=>({}));
+   throw new Error(data.error||"Download failed.");
+  }
+  const blob=await response.blob();
+  const disposition=response.headers.get("Content-Disposition")||"";
+  const match=disposition.match(/filename\*=UTF-8''([^;]+)/);
+  const fallback=disposition.match(/filename="([^"]+)"/);
+  const name=match?decodeURIComponent(match[1]):(fallback?fallback[1]:"download");
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  hideMessage();
+ } catch(e) {message(e.message,true)}
+}
+
+async function deleteFile(id) {
+ if(!confirm("Permanently delete this file?"))return;
+ try {
+  await api("/api/files?id="+encodeURIComponent(id),{method:"DELETE"});
+  message("File deleted.");
+  await loadFiles();
+ } catch(e){message(e.message,true)}
+}
+
+function openRecovery() {
+ $("recoveryModal").classList.remove("hidden");
+ $("recoveryOutput").classList.add("hidden");
+ $("recoveryMessage").classList.add("hidden");
+ $("generateRecovery").classList.remove("hidden");
+}
+
+async function generateRecovery() {
+ $("generateRecovery").disabled=true;
+ try {
+  const data=await api("/api/recovery/setup",{method:"POST"});
+  $("recoveryCodeText").textContent=data.recoveryCode;
+  $("recoveryOutput").classList.remove("hidden");
+  $("generateRecovery").classList.add("hidden");
+ } catch(e) {
+  $("recoveryMessage").textContent=e.message;
+  $("recoveryMessage").classList.remove("hidden");
+ } finally {
+  $("generateRecovery").disabled=false;
+ }
+}
+
+$("loginTab").onclick=()=>mountAuth("login");
+$("signupTab").onclick=()=>mountAuth("signup");
+$("uploadBtn").onclick=()=>$("fileInput").click();
+$("browseBtn").onclick=()=>$("fileInput").click();
+$("fileInput").onchange=e=>uploadFiles(e.target.files);
+$("refreshBtn").onclick=loadFiles;
+$("searchInput").oninput=renderFiles;
+$("recoveryButton").onclick=openRecovery;
+$("generateRecovery").onclick=generateRecovery;
+$("closeRecovery").onclick=()=>$("recoveryModal").classList.add("hidden");
+$("showRecovery").onclick=()=>$("resetModal").classList.remove("hidden");
+$("closeReset").onclick=()=>$("resetModal").classList.add("hidden");
+
+$("copyRecovery").onclick=async()=>{
+ await navigator.clipboard.writeText($("recoveryCodeText").textContent);
+ $("copyRecovery").textContent="Copied";
+};
+
+$("dropZone").ondragover=e=>e.preventDefault();
+$("dropZone").ondrop=e=>{
+ e.preventDefault();
+ uploadFiles(e.dataTransfer.files);
+};
+
+$("resetForm").onsubmit=async e=>{
+ e.preventDefault();
+ $("resetMessage").classList.add("hidden");
+ try {
+  const data=await publicApi("/api/recover",{
+   username:$("resetUsername").value.trim(),
+   recoveryCode:$("resetCode").value.trim(),
+   newPassword:$("resetPassword").value
+  });
+  $("newRecoveryText").textContent=data.recoveryCode;
+  $("newRecovery").classList.remove("hidden");
+  $("resetMessage").textContent=data.message;
+  $("resetMessage").classList.remove("hidden");
+  $("resetForm").classList.add("hidden");
+ } catch(err) {
+  $("resetMessage").textContent=err.message;
+  $("resetMessage").classList.remove("hidden");
+  $("resetMessage").classList.add("error");
+ }
+};
+
+$("copyNewRecovery").onclick=async()=>{
+ await navigator.clipboard.writeText($("newRecoveryText").textContent);
+ $("copyNewRecovery").textContent="Copied";
+};
+
+window.addEventListener("load",async()=>{
+ try {
+  if(!window.Clerk)throw new Error("Clerk failed to load. Check your CDN and publishable key.");
+  await Clerk.load({
+   ui:{ClerkUI:window.__internal_ClerkUICtor}
+  });
+  Clerk.addListener(()=>refreshAuth());
+  refreshAuth();
+ } catch(e) {
+  $("authError").textContent=e.message;
+ }
+});
+</script>
 </body>
 </html>
